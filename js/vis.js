@@ -45,7 +45,7 @@ BubbleChart = (function() {
     this.circles = null;
     this.fill_color = d3.scale.ordinal().domain(["low", "medium", "high"]).range(["#d84b2a", "#EAC33E", "#7aa25c"]);
     max_amount = d3.max(this.data, function(d) {
-      return parseInt(d.total_amount);
+      return d.total_amount;
     });
     this.radius_scale = d3.scale.pow().exponent(0.5).domain([0, max_amount]).range([2, 85]);
     this.create_nodes();
@@ -205,10 +205,17 @@ BubbleChart = (function() {
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
 
+projectcsv = function(error, data) {
+        data.forEach(function(d) {
+            d.agency_code = parseInt(d['Agency Code']);
+        });
+    });
 $(function() {
   var chart, render_vis;
   chart = null;
   render_vis = function(csv) {
+    d3.csv("data/Projects.csv", projectcsv);
+    console.log(projectcsv[0]);
     chart = new BubbleChart(csv);
     chart.start();
     return root.display_all();
