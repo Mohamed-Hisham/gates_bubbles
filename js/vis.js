@@ -1,5 +1,27 @@
-var BubbleChart, root,
+    var BubbleChart, root,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+ 
+ /*var Agency_Ids = function Agency_total(data){
+ };*/
+ // var Agency_Ids = function Agency_Ids(data) {
+ //      var Ids = [];
+      
+ //      for(i=0; i<data.length; i++) {
+ //        var agencyId = data[i].Agency_Code;
+ //        var inArray = jQuery.inArray(agencyId, unique) // returns -1 if cant find
+
+ //        if (inArray == -1) {
+ //          unique.push(agencyId);
+ //        }
+ //      }
+      
+ //      return Ids;
+ //    };
+
+ // console.log(Agency_Ids);
+
+    
 
 BubbleChart = (function() {
   function BubbleChart(data) {
@@ -15,6 +37,11 @@ BubbleChart = (function() {
     this.create_vis = __bind(this.create_vis, this);
     this.create_nodes = __bind(this.create_nodes, this);
     var max_amount;
+    this.agencies = d3.nest()
+                      .key(function(d) { return d["Agency_Code"]})
+                      .rollup(function(leaves) { return leaves.length; })
+                      .entries(data);
+
     this.data = data;
     this.width = 940;
     this.height = 600;
@@ -43,26 +70,27 @@ BubbleChart = (function() {
     this.nodes = [];
     this.force = null;
     this.circles = null;
-    this.fill_color = d3.scale.ordinal().domain(["low", "medium", "high"]).range(["#d84b2a", "#EAC33E", "#7aa25c"]);
+    this.fill_color = d3.scale.ordinal().domain(["low", "medium", "high"]).range(["red", "red", "red"]);
     max_amount = d3.max(this.data, function(d) {
-      return d.total_amount;
+      return parseInt(d.Agency_Code);
     });
-    this.radius_scale = d3.scale.pow().exponent(0.5).domain([0, max_amount]).range([2, 85]);
+    //this.radius_scale = d3.scale.pow().exponent(0.5).domain([0, max_amount]).range([2, 85]);
     this.create_nodes();
     this.create_vis();
   }
+  //end of bubble chart
 
   BubbleChart.prototype.create_nodes = function() {
-    this.data.forEach((function(_this) {
+    this.agencies.forEach((function(_this) {
       return function(d) {
         var node;
         node = {
-          id: d.id,
-          radius: _this.radius_scale(parseInt(d.total_amount)),
-          value: d.total_amount,
-          name: d.grant_title,
-          org: d.organization,
-          group: d.group,
+          id: d.Agency_Code,
+          radius: 30,
+          value: d.Agency_Code,
+          name: d.Agency_Name,
+          //org: d.organization,
+          Cost_Color: d.Cost_Color,
           year: d.start_year,
           x: Math.random() * 900,
           y: Math.random() * 800
@@ -73,6 +101,9 @@ BubbleChart = (function() {
     return this.nodes.sort(function(a, b) {
       return b.value - a.value;
     });
+
+
+
   };
 
   BubbleChart.prototype.create_vis = function() {
@@ -82,11 +113,15 @@ BubbleChart = (function() {
       return d.id;
     });
     that = this;
-    this.circles.enter().append("circle").attr("r", 0).attr("fill", (function(_this) {
+    this.circles.enter().append("circle").attr("r", (function(_this) {
+      return function(d) {
+        return d.radius;
+      };
+    })(this)).attr("fill", (function(_this) {
       return function(d) {
         return _this.fill_color(d.group);
       };
-    })(this)).attr("stroke-width", 1).attr("stroke", (function(_this) {
+    })(this)).attr("stroke-width", 2).attr("stroke", (function(_this) {
       return function(d) {
         return d3.rgb(_this.fill_color(d.group)).darker();
       };
@@ -97,9 +132,10 @@ BubbleChart = (function() {
     }).on("mouseout", function(d, i) {
       return that.hide_details(d, i, this);
     });
-    return this.circles.transition().duration(2000).attr("r", function(d) {
-      return d.radius;
-    });
+    // return this.circles.transition().duration(2000).attr("r", function(d) {
+    //   console.log(d.radius);
+    //   return d.radius;
+    // });
   };
 
   BubbleChart.prototype.charge = function(d) {
@@ -205,17 +241,12 @@ BubbleChart = (function() {
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
 
-projectcsv = function(error, data) {
-        data.forEach(function(d) {
-            d.agency_code = parseInt(d['Agency Code']);
-        });
-    });
 $(function() {
   var chart, render_vis;
   chart = null;
   render_vis = function(csv) {
-    d3.csv("data/Projects.csv", projectcsv);
-    console.log(projectcsv[0]);
+    
+
     chart = new BubbleChart(csv);
     chart.start();
     return root.display_all();
@@ -224,7 +255,7 @@ $(function() {
     return function() {
       return chart.display_group_all();
     };
-  })(this);
+  })(this)
   root.display_year = (function(_this) {
     return function() {
       return chart.display_by_year();
