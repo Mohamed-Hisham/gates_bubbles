@@ -44,7 +44,7 @@ BubbleChart = (function() {
 
     this.data = data;
     this.width = 940;
-    this.height = 600;
+    this.height = 650;
     this.tooltip = CustomTooltip("gates_tooltip", 240);
     this.center = {
       x: this.width / 2,
@@ -64,34 +64,42 @@ BubbleChart = (function() {
         y: this.height / 2
       }
     };
-    this.layout_gravity = -0.01;
+    this.layout_gravity = -0.02;
     this.damper = 0.1;
     this.vis = null;
     this.nodes = [];
     this.force = null;
     this.circles = null;
     this.fill_color = d3.scale.ordinal().domain(["low", "medium", "high"]).range(["red", "red", "red"]);
-    max_amount = d3.max(this.data, function(d) {
-      return parseInt(d.Agency_Code);
+    max_amount = d3.max(this.agencies, function(d) {
+      return d.values;
     });
-    //this.radius_scale = d3.scale.pow().exponent(0.5).domain([0, max_amount]).range([2, 85]);
+    // console.log(max_amount);
+    this.radius_scale = d3.scale.pow().exponent(0.5).domain([0,max_amount]).range([6,95]);
     this.create_nodes();
     this.create_vis();
   }
   //end of bubble chart
 
   BubbleChart.prototype.create_nodes = function() {
+      
+      // var doa = this.data.filter(function(row) {
+        
+
+      //   return row['Agency_Code'] == '5';
+      // });
+      // console.log(doa);
     this.agencies.forEach((function(_this) {
       return function(d) {
         var node;
         node = {
           id: d.Agency_Code,
-          radius: 30,
+          radius:  _this.radius_scale(d.values),
           value: d.Agency_Code,
-          name: d.Agency_Name,
+          name: d.key,
           //org: d.organization,
           Cost_Color: d.Cost_Color,
-          year: d.start_year,
+          year: d.values,
           x: Math.random() * 900,
           y: Math.random() * 800
         };
