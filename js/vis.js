@@ -1,12 +1,12 @@
     var BubbleChart, root,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
- 
+
  /*var Agency_Ids = function Agency_total(data){
  };*/
  // var Agency_Ids = function Agency_Ids(data) {
  //      var Ids = [];
-      
+
  //      for(i=0; i<data.length; i++) {
  //        var agencyId = data[i].Agency_Code;
  //        var inArray = jQuery.inArray(agencyId, unique) // returns -1 if cant find
@@ -15,13 +15,13 @@
  //          unique.push(agencyId);
  //        }
  //      }
-      
+
  //      return Ids;
  //    };
 
  // console.log(Agency_Ids);
 
-    
+
 
 BubbleChart = (function() {
   function BubbleChart(data) {
@@ -80,22 +80,33 @@ BubbleChart = (function() {
     this.create_vis();
   }
   //end of bubble chart
+  // agency_data = function (){
+
+  // }
 
   BubbleChart.prototype.create_nodes = function() {
-      
-      // var doa = this.data.filter(function(row) {
-        
 
-      //   return row['Agency_Code'] == '5';
-      // });
-      // console.log(doa);
+    var agenciesArray=[];
+    var agencies = this.agencies;
+    var agencyprojects;
+    for (var i = 0; i < this.agencies.length; i++) {
+      agencyprojects = this.data.filter(function(a) {
+        return a['Agency_Code'] == agencies[i].key;
+      });
+      var totalagency = 0;
+      for (var j = 0; j < agencyprojects.length; j++) {
+        totalagency+= ~~agencyprojects[j]["Project_LifeCycle_Cost"];
+       }
+      agenciesArray.push([this.agencies[i].key,totalagency]);
+    }
+    console.log(agenciesArray);
     this.agencies.forEach((function(_this) {
       return function(d) {
         var node;
         node = {
           id: d.Agency_Code,
           radius:  _this.radius_scale(d.values),
-          value: d.Agency_Code,
+          // value: 
           name: d.key,
           //org: d.organization,
           Cost_Color: d.Cost_Color,
@@ -253,7 +264,7 @@ $(function() {
   var chart, render_vis;
   chart = null;
   render_vis = function(csv) {
-    
+
 
     chart = new BubbleChart(csv);
     chart.start();
