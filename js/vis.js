@@ -1,25 +1,5 @@
-    var BubbleChart, root,
+var BubbleChart, root,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-
- /*var Agency_Ids = function Agency_total(data){
- };*/
- // var Agency_Ids = function Agency_Ids(data) {
- //      var Ids = [];
-
- //      for(i=0; i<data.length; i++) {
- //        var agencyId = data[i].Agency_Code;
- //        var inArray = jQuery.inArray(agencyId, unique) // returns -1 if cant find
-
- //        if (inArray == -1) {
- //          unique.push(agencyId);
- //        }
- //      }
-
- //      return Ids;
- //    };
-
- // console.log(Agency_Ids);
 
 
 
@@ -36,6 +16,8 @@ BubbleChart = (function() {
     this.start = __bind(this.start, this);
     this.create_vis = __bind(this.create_vis, this);
     this.create_nodes = __bind(this.create_nodes, this);
+    this.create_agencies_details= __bind(this.create_agencies_details, this);
+
     var max_amount;
     this.agencies = d3.nest()
                       .key(function(d) { return d["Agency_Code"]})
@@ -78,49 +60,108 @@ BubbleChart = (function() {
     this.radius_scale = d3.scale.pow().exponent(0.5).domain([0,max_amount]).range([6,95]);
     this.create_nodes();
     this.create_vis();
+    this.create_agencies_details();
+    this.agency_detail_array=[];
+
+
   }
   //end of bubble chart
-  // agency_data = function (){
 
-  // }
 
-  BubbleChart.prototype.create_nodes = function() {
+BubbleChart.prototype.create_agencies_details = function(){
+    
+    var agencies_array_detail = [];
+    this.agencies.forEach((function(_this){
+      var agencyprojects;
+      var agency;
+      return function(d){
+        agencyprojects = _this.data.filter(function(a) {
+          return a['Agency_Code'] == d.key;
+        });
 
-    var agenciesArray=[];
-    var agencies = this.agencies;
-    var agencyprojects;
-    for (var i = 0; i < this.agencies.length; i++) {
-      agencyprojects = this.data.filter(function(a) {
-        return a['Agency_Code'] == agencies[i].key;
-      });
-      var totalagency = 0;
-      for (var j = 0; j < agencyprojects.length; j++) {
-        totalagency+= ~~agencyprojects[j]["Project_LifeCycle_Cost"];
-       }
-      agenciesArray.push([this.agencies[i].key,totalagency]);
-    }
-    console.log(agenciesArray);
-    this.agencies.forEach((function(_this) {
-      return function(d) {
-        var node;
-        node = {
-          id: d.Agency_Code,
+        var totalagency = 0;
+        for (var j = 0; j < agencyprojects.length; j++) {
+          totalagency+= ~~agencyprojects[j]["Project_LifeCycle_Cost"];
+         }
+
+        agency = {
+          id: d.key,
+          projects: agencyprojects,
+          total: totalagency,
           radius:  _this.radius_scale(d.values),
-          // value: 
-          name: d.key,
-          //org: d.organization,
+          name: agencyprojects[0]["Agency_Name"],
           Cost_Color: d.Cost_Color,
           year: d.values,
           x: Math.random() * 900,
           y: Math.random() * 800
         };
-        return _this.nodes.push(node);
+
+        return agencies_array_detail.push(agency);
       };
     })(this));
+    this.agency_detail_array = agencies_array_detail;
+
+    return this.agency_detail_array.sort(function(a, b) {
+      return b.value - a.value;
+    });
+    console.log(this.agency_detail_array[0]);
+};
+
+  BubbleChart.prototype.create_nodes = function() {
+    var agencies_array_detail = [];
+    this.agencies.forEach((function(_this){
+      var agencyprojects;
+      var agency;
+      return function(d){
+        agencyprojects = _this.data.filter(function(a) {
+          return a['Agency_Code'] == d.key;
+        });
+
+        var totalagency = 0;
+        for (var j = 0; j < agencyprojects.length; j++) {
+          totalagency+= ~~agencyprojects[j]["Project_LifeCycle_Cost"];
+         }
+
+        agency = {
+          id: d.key,
+          projects: agencyprojects,
+          total: totalagency,
+          radius:  _this.radius_scale(d.values),
+          name: agencyprojects[0]["Agency_Name"],
+          Cost_Color: d.Cost_Color,
+          year: d.values,
+          x: Math.random() * 900,
+          y: Math.random() * 800
+        };
+
+
+        return agencies_array_detail.push(agency);
+      };//enf of foreach
+    })(this));
+    this.nodes = agencies_array_detail;
+    
+    // this.agencies.forEach((function(_this) {
+    //   return function(d) {
+    //     var node;
+    //     node = {
+    //       id: d.Agency_Code,
+    //       radius:  _this.radius_scale(d.values),
+    //       // value: 
+    //       name: d.key,
+    //       //org: d.organization,
+    //       Cost_Color: d.Cost_Color,
+    //       year: d.values,
+    //       x: Math.random() * 900,
+    //       y: Math.random() * 800
+    //     };
+    //     return _this.nodes.push(node);
+    //   };
+    // })(this));
+    console.log(this.nodes[0]);
+
     return this.nodes.sort(function(a, b) {
       return b.value - a.value;
     });
-
 
 
   };
@@ -240,7 +281,7 @@ BubbleChart = (function() {
     var content;
     d3.select(element).attr("stroke", "black");
     content = "<span class=\"name\">Title:</span><span class=\"value\"> " + data.name + "</span><br/>";
-    content += "<span class=\"name\">Amount:</span><span class=\"value\"> $" + (addCommas(data.value)) + "</span><br/>";
+    content += "<span class=\"name\">Amount:</span><span class=\"value\"> $" + (addCommas(data.total)) + "m</span><br/>";
     content += "<span class=\"name\">Year:</span><span class=\"value\"> " + data.year + "</span>";
     return this.tooltip.showTooltip(content, d3.event);
   };
@@ -290,4 +331,5 @@ $(function() {
     };
   })(this);
   return d3.csv("data/Projects.csv", render_vis);
-});
+
+  });
