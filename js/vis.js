@@ -34,15 +34,15 @@ BubbleChart = (function() {
       y: this.height / 2
     };
     this.year_centers = {
-      "min": {
+      "Under Budget": {
         x: this.width / 3,
         y: this.height / 2
       },
-      "avg": {
+      "On Budget": {
         x: this.width / 2,
         y: this.height / 2
       },
-      "max": {
+      "Over Budget": {
         x: 2 * this.width / 3,
         y: this.height / 2
       }
@@ -71,45 +71,6 @@ BubbleChart = (function() {
   }
   //end of bubble chart
 
-// BubbleChart.prototype.create_agencies_details = function(){
-    
-//     var agencies_array_detail = [];
-//     this.agencies.forEach((function(_this){
-//       var agencyprojects;
-//       var agency;
-//       return function(d){
-//         agencyprojects = _this.data.filter(function(a) {
-//           return a['Agency_Code'] == d.key;
-//         });
-
-//         var totalagency = 0;
-//         for (var j = 0; j < agencyprojects.length; j++) {
-//           totalagency+= ~~agencyprojects[j]["Project_LifeCycle_Cost"];
-//          }
-
-//         agency = {
-//           id: d.key,
-//           projects: agencyprojects,
-//           total: totalagency,
-//           radius:  _this.radius_scale(d.values),
-//           name: agencyprojects[0]["Agency_Name"],
-//           Cost_Color: d.Cost_Color,
-//           year: d.values,
-//           x: Math.random() * 900,
-//           y: Math.random() * 800
-//         };
-//         return agencies_array_detail.push(agency);
-
-//       };
-//     })(this));
-//     this.agency_detail_array = agencies_array_detail;
-
-//     return this.agency_detail_array.sort(function(a, b) {
-//       return b.value - a.value;
-//     });
-// };
-
-
   BubbleChart.prototype.create_nodes = function() {
     var agencies_array_detail = [];
     this.agencies.forEach((function(_this){
@@ -125,50 +86,53 @@ BubbleChart = (function() {
           totalagency+= ~~agencyprojects[j]["Project_LifeCycle_Cost"];
 
          }
+        var total_cost_variance= 0;
+        var cost_var_category;
+
+        for (var h = 0; h< agencyprojects.length; h++) {
+          total_cost_variance+= ~~agencyprojects[h]["Cost_Variance_mil"];
+        }
+
+       if (total_cost_variance==0){
+        cost_var_category="On Budget";
+        } else {
+          if (total_cost_variance>0){
+            cost_var_category="Under Budget";
+          } else{
+            cost_var_category="Over Budget";
+          }
+        }
+         
+        // console.log(cost_var_category);
+
         agency = {
           id: d.key,
           projects: agencyprojects,
           total: totalagency,
           radius:  _this.radius_scale(d.values),
           name: agencyprojects[0]["Agency_Name"],
-          Cost_Color: d.Cost_Color,
           year: d.values,
+          cost_variance:total_cost_variance,
+          cost_category : cost_var_category,
           x: Math.random() * 900,
           y: Math.random() * 800
         };
 
 
         return agencies_array_detail.push(agency);
+
       };//enf of foreach
     })(this));
     this.nodes = agencies_array_detail;
     this.max_life_cost= d3.max(this.nodes, function(d) {
       return d.total;
-
     });
+
+    console.log(agencies_array_detail[1]);
 
     this.min_life_cost=d3.min(this.nodes, function(d) {
       return d.total;
    });
-
-    // this.agencies.forEach((function(_this) {
-    //   return function(d) {
-    //     var node;
-    //     node = {
-    //       id: d.Agency_Code,
-    //       radius:  _this.radius_scale(d.values),
-    //       // value: 
-    //       name: d.key,
-    //       //org: d.organization,
-    //       Cost_Color: d.Cost_Color,
-    //       year: d.values,
-    //       x: Math.random() * 900,
-    //       y: Math.random() * 800
-    //     };
-    //     return _this.nodes.push(node);
-    //   };
-    // })(this));
-    // console.log(this.nodes[1]);
 
     return this.nodes.sort(function(a, b) {
       return b.value - a.value;
@@ -203,12 +167,6 @@ BubbleChart = (function() {
     }).on("mouseout", function(d, i) {
       return that.hide_details(d, i, this);
     });
-
-    
-    // return this.circles.transition().duration(2000).attr("r", function(d) {
-    //   console.log(d.radius);
-    //   return d.radius;
-    // });
   };
 
   BubbleChart.prototype.charge = function(d) {
@@ -260,7 +218,7 @@ BubbleChart = (function() {
     return (function(_this) {
       return function(d) {
         var target;
-        target = _this.year_centers[d.total];
+        target = _this.year_centers[d.cost_category];
         d.x = d.x + (target.x - d.x) * (_this.damper + 0.02) * alpha * 1.1;
         return d.y = d.y + (target.y - d.y) * (_this.damper + 0.02) * alpha * 1.1;
       };
@@ -270,9 +228,9 @@ BubbleChart = (function() {
   BubbleChart.prototype.display_years = function() {
     var years, years_data, years_x;
     years_x = {
-      "min": 160,
-      "avg": this.width / 2,
-      "max": this.width - 160
+      "Under Budget": 160,
+      "Within Budget": this.width / 2,
+      "Over Budget": this.width - 160
     };
     years_data = d3.keys(years_x);
     years = this.vis.selectAll(".years").data(years_data);
