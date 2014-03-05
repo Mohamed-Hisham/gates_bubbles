@@ -16,9 +16,10 @@ BubbleChart = (function() {
     this.start = __bind(this.start, this);
     this.create_vis = __bind(this.create_vis, this);
     this.create_nodes = __bind(this.create_nodes, this);
-    this.create_agencies_details= __bind(this.create_agencies_details, this);
 
-    var max_amount;
+    var max_num_projects;
+    this.max_life_cost;
+    this.min_life_cost;
     this.agencies = d3.nest()
                       .key(function(d) { return d["Agency_Code"]})
                       .rollup(function(leaves) { return leaves.length; })
@@ -33,15 +34,15 @@ BubbleChart = (function() {
       y: this.height / 2
     };
     this.year_centers = {
-      "2008": {
+      "min": {
         x: this.width / 3,
         y: this.height / 2
       },
-      "2009": {
+      "avg": {
         x: this.width / 2,
         y: this.height / 2
       },
-      "2010": {
+      "max": {
         x: 2 * this.width / 3,
         y: this.height / 2
       }
@@ -52,60 +53,62 @@ BubbleChart = (function() {
     this.nodes = [];
     this.force = null;
     this.circles = null;
-    this.fill_color = d3.scale.ordinal().domain(["low", "medium", "high"]).range(["red", "red", "red"]);
-    max_amount = d3.max(this.agencies, function(d) {
+    this.avg_life_cost=(this.min_life_cost+this.max_num_projects)/2;
+    this.fill_color = d3.scale.ordinal().domain([this.min_life_cost,(this.min_life_cost+this.avg_life_cost)/2,this.avg_life_cost,(this.avg_life_cost+this.max_life_cost)/2,this.max_life_cost]).range(["#FFCFCA","#FF988F", "#FF5E4F","#FF3825","#B61000"]);
+    //this.fill_color = d3.scale.category20();
+
+    max_num_projects = d3.max(this.agencies, function(d) {
       return d.values;
     });
-    // console.log(max_amount);
-    this.radius_scale = d3.scale.pow().exponent(0.5).domain([0,max_amount]).range([6,95]);
+
+
+    this.radius_scale = d3.scale.pow().exponent(0.5).domain([0,max_num_projects]).range([6,95]);
+
     this.create_nodes();
     this.create_vis();
-    this.create_agencies_details();
-    this.agency_detail_array=[];
 
 
   }
   //end of bubble chart
 
-
-BubbleChart.prototype.create_agencies_details = function(){
+// BubbleChart.prototype.create_agencies_details = function(){
     
-    var agencies_array_detail = [];
-    this.agencies.forEach((function(_this){
-      var agencyprojects;
-      var agency;
-      return function(d){
-        agencyprojects = _this.data.filter(function(a) {
-          return a['Agency_Code'] == d.key;
-        });
+//     var agencies_array_detail = [];
+//     this.agencies.forEach((function(_this){
+//       var agencyprojects;
+//       var agency;
+//       return function(d){
+//         agencyprojects = _this.data.filter(function(a) {
+//           return a['Agency_Code'] == d.key;
+//         });
 
-        var totalagency = 0;
-        for (var j = 0; j < agencyprojects.length; j++) {
-          totalagency+= ~~agencyprojects[j]["Project_LifeCycle_Cost"];
-         }
+//         var totalagency = 0;
+//         for (var j = 0; j < agencyprojects.length; j++) {
+//           totalagency+= ~~agencyprojects[j]["Project_LifeCycle_Cost"];
+//          }
 
-        agency = {
-          id: d.key,
-          projects: agencyprojects,
-          total: totalagency,
-          radius:  _this.radius_scale(d.values),
-          name: agencyprojects[0]["Agency_Name"],
-          Cost_Color: d.Cost_Color,
-          year: d.values,
-          x: Math.random() * 900,
-          y: Math.random() * 800
-        };
+//         agency = {
+//           id: d.key,
+//           projects: agencyprojects,
+//           total: totalagency,
+//           radius:  _this.radius_scale(d.values),
+//           name: agencyprojects[0]["Agency_Name"],
+//           Cost_Color: d.Cost_Color,
+//           year: d.values,
+//           x: Math.random() * 900,
+//           y: Math.random() * 800
+//         };
+//         return agencies_array_detail.push(agency);
 
-        return agencies_array_detail.push(agency);
-      };
-    })(this));
-    this.agency_detail_array = agencies_array_detail;
+//       };
+//     })(this));
+//     this.agency_detail_array = agencies_array_detail;
 
-    return this.agency_detail_array.sort(function(a, b) {
-      return b.value - a.value;
-    });
-    console.log(this.agency_detail_array[0]);
-};
+//     return this.agency_detail_array.sort(function(a, b) {
+//       return b.value - a.value;
+//     });
+// };
+
 
   BubbleChart.prototype.create_nodes = function() {
     var agencies_array_detail = [];
@@ -120,8 +123,8 @@ BubbleChart.prototype.create_agencies_details = function(){
         var totalagency = 0;
         for (var j = 0; j < agencyprojects.length; j++) {
           totalagency+= ~~agencyprojects[j]["Project_LifeCycle_Cost"];
-         }
 
+         }
         agency = {
           id: d.key,
           projects: agencyprojects,
@@ -139,7 +142,15 @@ BubbleChart.prototype.create_agencies_details = function(){
       };//enf of foreach
     })(this));
     this.nodes = agencies_array_detail;
-    
+    this.max_life_cost= d3.max(this.nodes, function(d) {
+      return d.total;
+
+    });
+
+    this.min_life_cost=d3.min(this.nodes, function(d) {
+      return d.total;
+   });
+
     // this.agencies.forEach((function(_this) {
     //   return function(d) {
     //     var node;
@@ -157,7 +168,7 @@ BubbleChart.prototype.create_agencies_details = function(){
     //     return _this.nodes.push(node);
     //   };
     // })(this));
-    console.log(this.nodes[0]);
+    // console.log(this.nodes[1]);
 
     return this.nodes.sort(function(a, b) {
       return b.value - a.value;
@@ -177,9 +188,9 @@ BubbleChart.prototype.create_agencies_details = function(){
       return function(d) {
         return d.radius;
       };
-    })(this)).attr("fill", (function(_this) {
+    })(this)).attr("fill", (function(color) {
       return function(d) {
-        return _this.fill_color(d.group);
+        return color.fill_color(d.total);
       };
     })(this)).attr("stroke-width", 2).attr("stroke", (function(_this) {
       return function(d) {
@@ -192,6 +203,8 @@ BubbleChart.prototype.create_agencies_details = function(){
     }).on("mouseout", function(d, i) {
       return that.hide_details(d, i, this);
     });
+
+    
     // return this.circles.transition().duration(2000).attr("r", function(d) {
     //   console.log(d.radius);
     //   return d.radius;
@@ -247,7 +260,7 @@ BubbleChart.prototype.create_agencies_details = function(){
     return (function(_this) {
       return function(d) {
         var target;
-        target = _this.year_centers[d.year];
+        target = _this.year_centers[d.total];
         d.x = d.x + (target.x - d.x) * (_this.damper + 0.02) * alpha * 1.1;
         return d.y = d.y + (target.y - d.y) * (_this.damper + 0.02) * alpha * 1.1;
       };
@@ -257,9 +270,9 @@ BubbleChart.prototype.create_agencies_details = function(){
   BubbleChart.prototype.display_years = function() {
     var years, years_data, years_x;
     years_x = {
-      "2008": 160,
-      "2009": this.width / 2,
-      "2010": this.width - 160
+      "min": 160,
+      "avg": this.width / 2,
+      "max": this.width - 160
     };
     years_data = d3.keys(years_x);
     years = this.vis.selectAll(".years").data(years_data);
@@ -280,9 +293,9 @@ BubbleChart.prototype.create_agencies_details = function(){
   BubbleChart.prototype.show_details = function(data, i, element) {
     var content;
     d3.select(element).attr("stroke", "black");
-    content = "<span class=\"name\">Title:</span><span class=\"value\"> " + data.name + "</span><br/>";
-    content += "<span class=\"name\">Amount:</span><span class=\"value\"> $" + (addCommas(data.total)) + "m</span><br/>";
-    content += "<span class=\"name\">Year:</span><span class=\"value\"> " + data.year + "</span>";
+    content = "<span class=\"name\">Agency Name :</span><span class=\"value\"> " + data.name + "</span><br/>";
+    content += "<span class=\"name\">Total lifeCycle Cost:</span><span class=\"value\"> $" + (addCommas(data.total)) + "m</span><br/>";
+    content += "<span class=\"name\">Number of Projects:</span><span class=\"value\"> " + data.year + "</span>";
     return this.tooltip.showTooltip(content, d3.event);
   };
 
