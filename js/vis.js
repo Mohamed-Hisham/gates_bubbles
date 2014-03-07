@@ -111,7 +111,6 @@ BubbleChart = (function() {
           total: totalagency,
           radius:  _this.radius_scale(d.values),
           name: agencyprojects[0]["Agency_Name"],
-          year: d.values,
           cost_variance:total_cost_variance,
           cost_category : cost_var_category,
           x: Math.random() * 900,
@@ -148,17 +147,13 @@ BubbleChart = (function() {
       return d.id;
     });
     that = this;
-    this.circles.enter().append("circle").attr("r", (function(_this) {
-      return function(d) {
-        return d.radius;
-      };
-    })(this)).attr("fill", (function(color) {
+    this.circles.enter().append("circle").attr("r", 0).attr("fill", (function(color) {
       return function(d) {
         return color.fill_color(d.total);
       };
     })(this)).attr("stroke-width", 2).attr("stroke", (function(_this) {
       return function(d) {
-        return d3.rgb(_this.fill_color(d.group)).darker();
+        return d3.rgb(_this.fill_color(d.to)).darker();
       };
     })(this)).attr("id", function(d) {
       return "bubble_" + d.id;
@@ -166,6 +161,9 @@ BubbleChart = (function() {
       return that.show_details(d, i, this);
     }).on("mouseout", function(d, i) {
       return that.hide_details(d, i, this);
+    });
+    return this.circles.transition().duration(2000).attr("r", function(d) {
+      return d.radius;
     });
   };
 
