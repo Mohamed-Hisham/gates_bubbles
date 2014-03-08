@@ -102,7 +102,7 @@ BubbleChart = (function() {
             cost_var_category="Over Budget";
           }
         }
-         
+
         // console.log(cost_var_category);
 
         agency = {
@@ -153,7 +153,7 @@ BubbleChart = (function() {
       };
     })(this)).attr("stroke-width", 2).attr("stroke", (function(_this) {
       return function(d) {
-        return d3.rgb(_this.fill_color(d.to)).darker();
+        return d3.rgb(_this.fill_color(d.to)).brighter();
       };
     })(this)).attr("id", function(d) {
       return "bubble_" + d.id;

@@ -1,3 +1,7 @@
+.body {
+  padding-top: 40px;
+  /*background-color:black;*/
+}
 a, a:visited, a:active {
   color: #444;
 }
@@ -19,7 +23,7 @@ footer {
 
 .years {
   font-size: 21px;
-  fill: #0100EE;
+  fill: black;
 }
 
 .tooltip {
