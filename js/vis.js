@@ -54,7 +54,13 @@ BubbleChart = (function() {
     this.force = null;
     this.circles = null;
     this.avg_life_cost=(this.min_life_cost+this.max_num_projects)/2;
-    this.fill_color = d3.scale.ordinal().domain([this.min_life_cost,(this.min_life_cost+this.avg_life_cost)/2,this.avg_life_cost,(this.avg_life_cost+this.max_life_cost)/2,this.max_life_cost]).range(["#FFCFCA","#FF988F", "#FF5E4F","#FF3825","#B61000"]);
+    this.fill_color = d3.scale.ordinal().domain(
+      [this.min_life_cost,
+      (this.min_life_cost+this.avg_life_cost)/2,
+      this.avg_life_cost,
+      (this.avg_life_cost+this.max_life_cost)/2,
+      this.max_life_cost])
+    .range(["#FFCFCA","#FF988F", "#FF5E4F","#FF3825","#B61000"]);
     //this.fill_color = d3.scale.category20();
 
     max_num_projects = d3.max(this.agencies, function(d) {
